@@ -1,116 +1,111 @@
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-public class EdgeWeighted implements Comparable<EdgeWeighted> {
-
-	NodeWeighted source;
-	NodeWeighted destination;
+public class EdgeWeighted implements Comparable<EdgeWeighted>
+{
+	NodeWeighted dest;
+	NodeWeighted src;
 	double weight;
 
-	EdgeWeighted(NodeWeighted s, NodeWeighted d, double w) {
-		// Note that we are choosing to use the (exact) same objects in the Edge class
-		// and in the GraphShow and GraphWeighted classes on purpose - this MIGHT NOT
-		// be something you want to do in your own code, but for sake of readability
-		// we've decided to go with this option
-		source = s;
-		destination = d;
+	EdgeWeighted(NodeWeighted s, NodeWeighted d, double w) 
+	{
+		src = s;
 		weight = w;
+		dest = d;
+	}
+	public String toString()
+	{
+		return String.format("(%s -> %s, %f)", src.name, dest.name, weight);
 	}
 
-	public String toString() {
-		return String.format("(%s -> %s, %f)", source.name, destination.name, weight);
-	}
-
-	// We need this method if we want to use PriorityQueues instead of LinkedLists
-	// to store our edges, the benefits are discussed later, we'll be using LinkedLists
-	// to make things as simple as possible
-	public int compareTo(EdgeWeighted otherEdge) {
-
-		// We can't simply use return (int)(this.weight - otherEdge.weight) because
-		// this sometimes gives false results
-		if (this.weight > otherEdge.weight) {
+	public int compareTo(EdgeWeighted otherEdge)
+	{
+		if (this.weight > otherEdge.weight)
+		{
 			return 1;
 		}
 		else return -1;
 	}
-	public static class NodeWeighted {
-		// The int n and String name are just arbitrary attributes
-		// we've chosen for our nodes these attributes can of course
-		// be whatever you need
-		int n;
+	public static class NodeWeighted 
+	{
 		String name;
-		private boolean visited;
-		LinkedList<EdgeWeighted> edges;
+		int n;
+		private boolean isVisited;
+		LinkedList<EdgeWeighted> edgeList;
 
-		NodeWeighted(int n, String name) {
+		NodeWeighted(int n, String name) 
+		{
 			this.n = n;
 			this.name = name;
-			visited = false;
-			edges = new LinkedList<>();
+			isVisited = false;
+			edgeList = new LinkedList<>();
 		}
 
-		boolean isVisited() {
-			return visited;
+		boolean isVisited() 
+		{
+			return isVisited;
 		}
 
-		void visit() {
-			visited = true;
+		void visit()
+		{
+			isVisited = true;
 		}
 
-		void unvisit() {
-			visited = false;
+		void unvisit()
+		{
+			isVisited = false;
 		}
 	}
-	public static class GraphWeighted {
-		private Set<NodeWeighted> nodes;
-		private boolean directed;
+	public static class GraphWeighted 
+	{
+		private Set<NodeWeighted> nodeSet;
+		private boolean isDirected;
 
-		GraphWeighted(boolean directed) {
-			this.directed = directed;
-			nodes = new HashSet<>();
+		GraphWeighted(boolean directed)
+		{
+			this.isDirected = directed;
+			nodeSet = new HashSet<>();
 		}
-		// Doesn't need to be called for any node that has an edge to another node
-		// since addEdge makes sure that both nodes are in the nodes Set
-		public void addNode(NodeWeighted... n) {
-			// We're using a var arg method so we don't have to call
-			// addNode repeatedly
-			nodes.addAll(Arrays.asList(n));
+		// called for any node that has no edges
+		public void addNode(NodeWeighted... n) 
+		{
+			nodeSet.addAll(Arrays.asList(n));
 		}
 
-		public void addEdge(NodeWeighted source, NodeWeighted destination, double weight) {
-			// Since we're using a Set, it will only add the nodes
-			// if they don't already exist in our graph
-			nodes.add(source);
-			nodes.add(destination);
+		public void addEdge(NodeWeighted src, NodeWeighted dest, double weight) 
+		{
 
-			// We're using addEdgeHelper to make sure we don't have duplicate edges
-			addEdgeHelper(source, destination, weight);
+			nodeSet.add(src);
+			nodeSet.add(dest);
 
-			if (!directed && source != destination) {
-				addEdgeHelper(destination, source, weight);
+			// addEdgeHelper to make sure there are no duplicate edges
+			addEdgeHelper(src, dest, weight);
+
+			if (!isDirected && src != dest)
+			{     
+				addEdgeHelper(dest, src, weight);
 			}
 		}
 
-		private void addEdgeHelper(NodeWeighted a, NodeWeighted b, double weight) {
-			// Go through all the edges and see whether that edge has
-			// already been added
-			for (EdgeWeighted edge : a.edges) {
-				if (edge.source == a && edge.destination == b) {
-					// Update the value in case it's a different one now
+		private void addEdgeHelper(NodeWeighted j, NodeWeighted k, double weight)
+		{
+			// Go through all the edges and see whether that edge has already been added
+			for (EdgeWeighted edge : j.edgeList) 
+			{
+				if (edge.src == j && edge.dest == k) 
+				{
+					// Update the value 
 					edge.weight = weight;
 					return;
 				}
 			}
-			// If it hasn't been added already (we haven't returned
-			// from the for loop), add the edge
-			a.edges.add(new EdgeWeighted(a, b, weight));
+			// If it hasn't been added already add the edge
+			j.edgeList.add(new EdgeWeighted(j, k, weight));
 		}
 		public void printEdges() {
-			for (NodeWeighted node : nodes) {
-				LinkedList<EdgeWeighted> edges = node.edges;
+			for (NodeWeighted node : nodeSet) {
+				LinkedList<EdgeWeighted> edges = node.edgeList;
 
 				if (edges.isEmpty()) {
 					System.out.println("Node " + node.name + " has no edges.");
@@ -119,269 +114,269 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 				System.out.print("Node " + node.name + " has edges to: ");
 
 				for (EdgeWeighted edge : edges) {
-					System.out.print(edge.destination.name + "(" + edge.weight + ") ");
+					System.out.print(edge.dest.name + "(" + edge.weight + ") ");
 				}
 				System.out.println();
 			}
+
 		}
+	
 
-		// Necessary call if we want to run the algorithm multiple times
-		public void resetNodesVisited() {
-			for (NodeWeighted node : nodes) {
-				node.unvisit();
-			}
+	public void DijkstraShortestPath(NodeWeighted start, NodeWeighted end) 
+	{
+
+		HashMap<NodeWeighted, NodeWeighted> changedAt = new HashMap<>();
+		changedAt.put(start, null);
+
+		// Keep track of the shortest path so far for every node
+		HashMap<NodeWeighted, Double> shortestPathMap = new HashMap<>();
+
+		// Setting each node shortest path weight to positive infinity at start and starting node shortest path weight to 0
+		for (NodeWeighted node : nodeSet) 
+		{
+			if (node == start)
+				shortestPathMap.put(start, 0.0);
+			else shortestPathMap.put(node, Double.POSITIVE_INFINITY);
 		}
-
-		public void DijkstraShortestPath(NodeWeighted start, NodeWeighted end) {
-			// We keep track of which path gives us the shortest path for each node
-			// by keeping track how we arrived at a particular node, we effectively
-			// keep a "pointer" to the parent node of each node, and we follow that
-			// path to the start
-			HashMap<NodeWeighted, NodeWeighted> changedAt = new HashMap<>();
-			changedAt.put(start, null);
-
-			// Keeps track of the shortest path we've found so far for every node
-			HashMap<NodeWeighted, Double> shortestPathMap = new HashMap<>();
-
-			// Setting every node's shortest path weight to positive infinity to start
-			// except the starting node, whose shortest path weight is 0
-			for (NodeWeighted node : nodes) {
-				if (node == start)
-					shortestPathMap.put(start, 0.0);
-				else shortestPathMap.put(node, Double.POSITIVE_INFINITY);
+		// go through all nodes possible from starting node
+		for (EdgeWeighted edge : start.edgeList) {
+			shortestPathMap.put(edge.dest, edge.weight);
+			changedAt.put(edge.dest, start);
+		}
+		start.visit();	
+		while (true) {
+			NodeWeighted currentNode = closestReachableUnvisited(shortestPathMap);
+			
+			if (currentNode == null)
+			{
+				System.out.println("There isn't a path between " + start.name + " and " + end.name);
+				return;
 			}
 
-			// Now we go through all the nodes we can go to from the starting node
-			// (this keeps the loop a bit simpler)
-			for (EdgeWeighted edge : start.edges) {
-				shortestPathMap.put(edge.destination, edge.weight);
-				changedAt.put(edge.destination, start);
-			}
+			
+			if (currentNode == end)
+			{
+				System.out.println("The path with the lowest cost from Stop "
+						+ start.name + " to Stop " + end.name + " is:");
 
-			start.visit();
-
-			// This loop runs as long as there is an unvisited node that we can
-			// reach from any of the nodes we could till then
-			while (true) {
-				NodeWeighted currentNode = closestReachableUnvisited(shortestPathMap);
-				// If we haven't reached the end node yet, and there isn't another
-				// reachable node the path between start and end doesn't exist
-				// (they aren't connected)
-				if (currentNode == null) {
-					System.out.println("There isn't a path between " + start.name + " and " + end.name);
-					return;
-				}
-
-				// If the closest non-visited node is our destination, we want to print the path
-				if (currentNode == end) {
-					System.out.println("The path with the lowest cost from Stop "
-							+ start.name + " to Stop " + end.name + " is:");
-
-					NodeWeighted child = end;
-
-					// It makes no sense to use StringBuilder, since
-					// repeatedly adding to the beginning of the string
-					// defeats the purpose of using StringBuilder
-					String path = end.name;
-					while (true) {
-						NodeWeighted parent = changedAt.get(child);
-						if (parent == null) {
-							break;
-						}
-
-						// Since our changedAt map keeps track of child -> parent relations
-						// in order to print the path we need to add the parent before the child and
-						// it's descendants
-						path = parent.name + " " + path;
-						child = parent;
+				NodeWeighted child = end;
+				String path = end.name;
+				while (true) {
+					NodeWeighted parent = changedAt.get(child);
+					if (parent == null)
+					{
+						break;
 					}
-					System.out.println(path);
-					System.out.println("The path costs: " + shortestPathMap.get(end));
-					return;
+					path = parent.name + " " + path;
+					child = parent;
 				}
-				currentNode.visit();
-
-				// Now we go through all the unvisited nodes our current node has an edge to
-				// and check whether its shortest path value is better when going through our
-				// current node than whatever we had before
-				for (EdgeWeighted edge : currentNode.edges) {
-					if (edge.destination.isVisited())
-						continue;
-
-					if (shortestPathMap.get(currentNode)
-							+ edge.weight
-							< shortestPathMap.get(edge.destination)) {
-						shortestPathMap.put(edge.destination,
-								shortestPathMap.get(currentNode) + edge.weight);
-						changedAt.put(edge.destination, currentNode);
-					}
-				}
+				System.out.println(path);
+				System.out.println("The path costs: " + shortestPathMap.get(end));
+				return;
 			}
-		}
+			currentNode.visit();
 
-		private NodeWeighted closestReachableUnvisited(HashMap<NodeWeighted, Double> shortestPathMap) {
-
-			double shortestDistance = Double.POSITIVE_INFINITY;
-			NodeWeighted closestReachableNode = null;
-			for (NodeWeighted node : nodes) {
-				if (node.isVisited())
+			for (EdgeWeighted edge : currentNode.edgeList)
+			{
+				if (edge.dest.isVisited())
 					continue;
 
-				double currentDistance = shortestPathMap.get(node);
-				if (currentDistance == Double.POSITIVE_INFINITY)
-					continue;
-
-				if (currentDistance < shortestDistance) {
-					shortestDistance = currentDistance;
-					closestReachableNode = node;
+				if (shortestPathMap.get(currentNode)
+						+ edge.weight
+						< shortestPathMap.get(edge.dest))
+				{
+					shortestPathMap.put(edge.dest,
+							shortestPathMap.get(currentNode) + edge.weight);
+					changedAt.put(edge.dest, currentNode);
 				}
 			}
-			return closestReachableNode;
 		}
 	}
 
-	public static class GraphShow {
-		static String fileName = "";
-		static int nodes = 0;
-		static int edges = 0;
-		static double cost = 0;
-		static ArrayList<String> stopID = new ArrayList<String>();
-		static ArrayList<String> stopID1 = new ArrayList<String>();
-		static ArrayList<String> tripID = new ArrayList<String>();
-		static ArrayList<Integer> StopIDint = new ArrayList<>();
-		static ArrayList<String> tripData = new ArrayList<>();
-		static ArrayList<String> arrivalTime = new ArrayList<>();
-		static ArrayList<String> arrayOfTrips = new ArrayList<>();
-		static ArrayList<String> transferData = new ArrayList<>();
-		static ArrayList<String> minTransferTime = new ArrayList<>();
-		static ArrayList<Integer> minTransferTimeint = new ArrayList<>();
-		static ArrayList<String> transferType = new ArrayList<>();
-		static ArrayList<String> fromStop = new ArrayList<>();
-		static ArrayList<String> toStop = new ArrayList<>();
-		static ArrayList<Double> costList = new ArrayList<>();
+	private NodeWeighted closestReachableUnvisited(HashMap<NodeWeighted, Double> shrstPMap) 
+	{
 
-		public static void parseFile() throws IOException
+		double shrstDist = Double.POSITIVE_INFINITY;
+		NodeWeighted closeReachableNode = null;
+		for (NodeWeighted node : nodeSet) 
 		{
-			String file = "stops.txt"; 
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String line;
-			try {
-				@SuppressWarnings("unused")
-				String headerLine = br.readLine();
-				while((line=br.readLine())!=null)
-				{
-					String[] columns = line.split(",");
-					stopID.add(columns[0]);
-				}
+			if (node.isVisited())
+				continue;
 
-			} catch (Exception e) {
-				br.close();
-			}
+			double currDist = shrstPMap.get(node);
+			if (currDist == Double.POSITIVE_INFINITY)
+				continue;
+
+			if (currDist < shrstDist) 
 			{
-				String file2 = "stop_times.txt"; 
-				@SuppressWarnings("resource")
-				BufferedReader br2 = new BufferedReader(new FileReader(file2));
-				String line2;
-				try {
-					@SuppressWarnings("unused")
-					String headerLine = br2.readLine();
-					while( (line2 = br2.readLine()) != null)
-					{
-						tripData.add(line2);
-					}
+				shrstDist = currDist;
+				closeReachableNode = node;
+			}
+		}
+		return closeReachableNode;
+	}
+}
 
-				} catch (Exception e) {
-					br.close();
+public static class Graph 
+{
+	static String fileName = "";
+	static int nodes = 0;
+	static int edges = 0;
+	static double cost = 0;
+	static ArrayList<String> stopID = new ArrayList<String>();
+	static ArrayList<String> stopID1 = new ArrayList<String>();
+	static ArrayList<String> tripID = new ArrayList<String>();
+	static ArrayList<Integer> StopIDint = new ArrayList<>();
+	static ArrayList<String> tripData = new ArrayList<>();
+	static ArrayList<String> arrivalTime = new ArrayList<>();
+	static ArrayList<String> arrayOfTrips = new ArrayList<>();
+	static ArrayList<String> transferData = new ArrayList<>();
+	static ArrayList<String> minTransferTime = new ArrayList<>();
+	static ArrayList<Integer> minTransferTimeint = new ArrayList<>();
+	static ArrayList<String> transferType = new ArrayList<>();
+	static ArrayList<String> fromStop = new ArrayList<>();
+	static ArrayList<String> toStop = new ArrayList<>();
+	static ArrayList<Double> costList = new ArrayList<>();
 
-				}
-				String[] g = stopID.toArray(new String[0]);
-				for (int i = 0; i < stopID.size(); i++) 
-				{
-					int j = Integer.parseInt(g[i]);
-					StopIDint.add(j);
-				}
-
-
-				file = "stop_times.txt"; 
-				BufferedReader br1 = new BufferedReader(new FileReader(file));
-				String line1;
-				try {
-					@SuppressWarnings("unused")
-					String headerLine = br1.readLine();
-					while((line1=br1.readLine())!=null)
-					{
-						String[] columns = line1.split(",");
-						tripID.add(columns[0]);
-						stopID1.add(columns[3]);
-						arrivalTime.add(columns[2]);
-					}
-
-				} catch (Exception e) {
-					br1.close();
-				}
+	public static void parseFile() throws IOException
+	{
+		//read through file to make ArrayList of stops
+		String file = "stops.txt"; 
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		String line;
+		try {
+			@SuppressWarnings("unused")
+			String headerLine = br.readLine();
+			while((line=br.readLine())!=null)
+			{
+				String[] columns = line.split(",");
+				stopID.add(columns[0]);
 			}
 
-		}
-
-		public static void readTransfers() throws IOException
+		} catch (Exception e) 
 		{
-			String file = "transfers.txt"; 
-			BufferedReader br3 = new BufferedReader(new FileReader(file));
-			String line3;
+			br.close();
+		}
+		{
+			//read through file to make ArrayList of tripData
+			String file2 = "stop_times.txt"; 
+			@SuppressWarnings("resource")
+			BufferedReader br2 = new BufferedReader(new FileReader(file2));
+			String line2;
 			try {
 				@SuppressWarnings("unused")
-				String headerLine = br3.readLine();
-				while( (line3 = br3.readLine()) != null)
-				{	String[] columns = line3.split(",");
-				fromStop.add(columns[0]);
-				toStop.add(columns[1]);
-				transferType.add(columns[2]);
-				transferData.add(line3);
+				String headerLine = br2.readLine();
+				while( (line2 = br2.readLine()) != null)
+				{
+					tripData.add(line2);
+				}
+
+			} catch (Exception e)
+{
+				br.close();
+
+			}
+			//convert stopID to int array
+
+			String[] g = stopID.toArray(new String[0]);
+			for (int i = 0; i < stopID.size(); i++) 
+			{
+				int j = Integer.parseInt(g[i]);
+				StopIDint.add(j);
+			}
+
+			//read through file to make ArrayList of tripID stopID and arrival times
+			file = "stop_times.txt"; 
+			BufferedReader br1 = new BufferedReader(new FileReader(file));
+			String line1;
+			try {
+				@SuppressWarnings("unused")
+				String headerLine = br1.readLine();
+				while((line1=br1.readLine())!=null)
+				{
+					String[] columns = line1.split(",");
+					tripID.add(columns[0]);
+					stopID1.add(columns[3]);
+					arrivalTime.add(columns[2]);
 				}
 
 			} catch (Exception e) {
-				br3.close();
+				br1.close();
+			}
+		}
+
+	}
+	//parses transfers.txt and handles cost calculation
+	public static void readTransfers() throws IOException
+	{
+		String file = "transfers.txt"; 
+		BufferedReader br3 = new BufferedReader(new FileReader(file));
+		String line3;
+		try {
+			@SuppressWarnings("unused")
+			String headerLine = br3.readLine();
+			while( (line3 = br3.readLine()) != null)
+			{	String[] columns = line3.split(",");
+			fromStop.add(columns[0]);
+			toStop.add(columns[1]);
+			transferType.add(columns[2]);
+			transferData.add(line3);
 			}
 
-			for (int i = 0; i < transferData.size(); i++) {
+		} catch (Exception e)
+		{
+			br3.close();
+		}
 
-				String str = transferData.get(i);
-				String[] columns = str.split(",", -1); 
-				minTransferTime.add(columns[3]);
-			}
-			System.out.println(minTransferTime.get(1));
-			for (int i = 0; i < transferData.size(); i++) {
-				if (transferType.get(i).equals("2"))
-				{
+		for (int i = 0; i < transferData.size(); i++) 
+		{
+			String str = transferData.get(i);
+			String[] columns = str.split(",", -1); 
+			minTransferTime.add(columns[3]);
+		}
+		System.out.println(minTransferTime.get(1));
+		for (int i = 0; i < transferData.size(); i++) 
+		{
+			if (transferType.get(i).equals("2"))
+			{
+				double temp =	Integer.parseInt( minTransferTime.get(i));
+				costList.add(temp/100);
 
-					double temp =	Integer.parseInt( minTransferTime.get(i));
-					costList.add(temp/100);
-
-				} else costList.add((double)0);
-
-			}
-
+			} else costList.add((double)0);
 
 		}
 
-		public static void printTime(String s0) throws IOException
+
+	}
+	// print time for Q3
+	public static void printTime(String s0) throws IOException
+	{
+		parseFile();	
+		readTransfers();
+		if (arrivalTime.contains(s0))
 		{
-			parseFile();	
-			readTransfers();
+			System.out.println("\n here are all of the trips which have the inputted arrival time:");
+			System.out.println("\nTripID: Arrival Time: DepartureTime: StopID: stop_sequence: stop_headsign: pickup_type: drop_off_type: shape_dist_traveled: ");
 			for (int i = 0; i < arrivalTime.size(); i++)
 			{
+
 				String s1 = arrivalTime.get(i);
 				if (s1.equals(s0)) {
 					arrayOfTrips.add((tripData.get(i)));
 					System.out.println(tripData.get(i));
 				}
 
-			}
-		}
-		public static void setup(String busStop1, String busStop2) throws IOException {
-			GraphWeighted graphWeighted = new GraphWeighted(true);
-			parseFile();	
-			readTransfers();
+			} 
+		}else System.out.println("error the input is in the incorrect format or there are no trips at the inputted time");
+	}
+	//set up for hash map array list graph and creates nodes and edges
+	public static void setup(String busStop1, String busStop2) throws IOException {
+
+		GraphWeighted graphWeighted = new GraphWeighted(true);
+		parseFile();	
+		readTransfers();
+		if (stopID.contains(busStop1) && stopID.contains(busStop2))
+		{
 			List<NodeWeighted> nodeList = new ArrayList<>(stopID.size());
 			HashMap<String, Integer> hashMap = new HashMap<>();
 			for(int i=0; i<stopID.size(); i++) {
@@ -400,40 +395,59 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 						nodeList.get(hashMap.get(toStop.get(i))), costList.get(i));	
 			}
 			graphWeighted.DijkstraShortestPath(nodeList.get(hashMap.get(busStop1)),nodeList.get(hashMap.get(busStop2)));
-
 		}
-
-
-		public static void main(String[] args) throws IOException {
-
-
-			Scanner input = new Scanner(System.in);
-			System.out.println("Welcome to our Algorithms and Data Structures Project."
-					+ "\n please input \"1\" for dijkstra algorithm or \"2\" for search by time");
-			String checker = input.next();
-			if (checker.equals("1")) {
-				
-					
-						System.out.println("\nPlease input two bus stops to find shortest path.");
-						String busStop1 = input.next();
-						String busStop2 = input.next();
-						System.out.println("One Moment Please.");
-						setup(busStop1,busStop2);
-						
-
-					}
-
-				
-			
-			else if (checker.equals("2")){
-				System.out.println("\n please input a time to search for");
-				String tmp = input.next();
-				String time = " " + tmp;
-				System.out.println("\n here are all of the trips which have the inputted arrival time:");
-				System.out.println("\nTripID: Arrival Time: DepartureTime: StopID: stop_sequence: stop_headsign: pickup_type: drop_off_type: shape_dist_traveled: ");
-				printTime(time);
-				
-			}
+		else {
+			System.out.println("error bus stop does not exist");
 		}
 	}
+	public static void main(String[] args) throws IOException {
+		@SuppressWarnings("resource")
+		Scanner input = new Scanner(System.in);
+		boolean isValid = true;
+		System.out.println("Welcome to our Algorithms and Data Structures Project.");
+		do {
+
+			System.out.println("\n please input \"1\" for dijkstra algorithm or \"2\" for search by time or enther Quit at any time");
+			String checker = input.next();
+			if (checker.equalsIgnoreCase("Quit"))
+			{
+				System.out.println("program terminated");
+				isValid = false;
+			}
+			if (checker.equals("1")) {
+				System.out.println("\nPlease input two bus stops to find shortest path.");
+				String busStop1 = input.next();
+				if (busStop1.equalsIgnoreCase("Quit"))
+				{
+					System.out.println("program terminated");
+					isValid = false;
+				}
+				String busStop2 = input.next();
+				if (busStop2.equalsIgnoreCase("Quit"))
+				{
+					System.out.println("program terminated");
+					isValid = false;
+				}
+				System.out.println("One Moment Please.");
+				setup(busStop1,busStop2);
+			}
+			else if (checker.equals("2")){
+				System.out.println("\n please input a time to search for in the format hh:mm:ss");
+				String tmp = input.next();
+				if (tmp.equalsIgnoreCase("Quit"))
+				{
+					System.out.println("program terminated");
+					isValid = false;
+				}
+				String time = " " + tmp;
+				printTime(time);
+			}
+			else {
+				System.out.println("error incorrect input");
+			}
+		}
+		while(isValid);
+	}
+}
+
 }
