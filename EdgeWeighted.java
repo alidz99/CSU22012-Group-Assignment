@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -251,10 +252,13 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 		static ArrayList<String> tripData = new ArrayList<>();
 		static ArrayList<String> arrivalTime = new ArrayList<>();
 		static ArrayList<String> arrayOfTrips = new ArrayList<>();
-
-
-
-
+		static ArrayList<String> transferData = new ArrayList<>();
+		static ArrayList<String> minTransferTime = new ArrayList<>();
+		static ArrayList<Integer> minTransferTimeint = new ArrayList<>();
+		static ArrayList<String> transferType = new ArrayList<>();
+		static ArrayList<String> fromStop = new ArrayList<>();
+		static ArrayList<String> toStop = new ArrayList<>();
+		static ArrayList<Double> costList = new ArrayList<>();
 
 		public static void parseFile() throws IOException
 		{
@@ -275,12 +279,12 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 			}
 			{
 				String file2 = "stop_times.txt"; 
+				@SuppressWarnings("resource")
 				BufferedReader br2 = new BufferedReader(new FileReader(file2));
 				String line2;
 				try {
 					@SuppressWarnings("unused")
 					String headerLine = br2.readLine();
-
 					while( (line2 = br2.readLine()) != null)
 					{
 						tripData.add(line2);
@@ -296,6 +300,8 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 					int j = Integer.parseInt(g[i]);
 					StopIDint.add(j);
 				}
+
+
 				file = "stop_times.txt"; 
 				BufferedReader br1 = new BufferedReader(new FileReader(file));
 				String line1;
@@ -315,8 +321,49 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 				}
 			}
 
+		}
+
+		public static void readTransfers() throws IOException
+		{
+			String file = "transfers.txt"; 
+			BufferedReader br3 = new BufferedReader(new FileReader(file));
+			String line3;
+			try {
+				@SuppressWarnings("unused")
+				String headerLine = br3.readLine();
+				while( (line3 = br3.readLine()) != null)
+				{	String[] columns = line3.split(",");
+				fromStop.add(columns[0]);
+				toStop.add(columns[1]);
+				transferType.add(columns[2]);
+				transferData.add(line3);
+				}
+
+			} catch (Exception e) {
+				br3.close();
+			}
+
+			for (int i = 0; i < transferData.size(); i++) {
+
+				String str = transferData.get(i);
+				String[] columns = str.split(",", -1); 
+				minTransferTime.add(columns[3]);
+			}
+			System.out.println(minTransferTime.get(1));
+			for (int i = 0; i < transferData.size(); i++) {
+				if (transferType.get(i).equals("2"))
+				{
+
+					double temp =	Integer.parseInt( minTransferTime.get(i));
+					costList.add(temp/100);
+
+				} else costList.add((double)0);
+
+			}
+
 
 		}
+
 		public static void printTime(String s0)
 		{
 			for (int i = 0; i < arrivalTime.size(); i++)
@@ -329,13 +376,10 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 
 			}
 		}
-
-		public static void main(String[] args) throws IOException {
+		public static void setup(String busStop1, String busStop2) throws IOException {
 			GraphWeighted graphWeighted = new GraphWeighted(true);
-			String test = " 5:25:00";
 			parseFile();	
-			printTime(test);
-
+			readTransfers();
 			List<NodeWeighted> nodeList = new ArrayList<>(stopID.size());
 			HashMap<String, Integer> hashMap = new HashMap<>();
 			for(int i=0; i<stopID.size(); i++) {
@@ -343,9 +387,36 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 				hashMap.put(stopID.get(i),i);
 				nodeList.add(nodeName);
 			}	
+			for (int i = 1; i < stopID1.size(); i++) {
+				if (tripID.get(i).equals(tripID.get(i-1))){
+					graphWeighted.addEdge(nodeList.get(hashMap.get(stopID1.get(i-1))),
+							nodeList.get(hashMap.get(stopID1.get(i))), 1);
+				}
+			}
+			for (int i = 0; i < transferData.size(); i++) {
+				graphWeighted.addEdge(nodeList.get(hashMap.get(fromStop.get(i))),
+						nodeList.get(hashMap.get(toStop.get(i))), costList.get(i));	
+			}
+			graphWeighted.DijkstraShortestPath(nodeList.get(hashMap.get(busStop1)),nodeList.get(hashMap.get(busStop2)));
 
-			//graphWeighted.addEdge(nodeList.get(hashMap.get(stopID.get(0))), nodeList.get(hashMap.get(stopID.get(1))), 8);
-			graphWeighted.DijkstraShortestPath(nodeList.get(0),nodeList.get(1));
+		}
+
+
+		public static void main(String[] args) throws IOException {
+
+
+			Scanner input = new Scanner(System.in);
+			System.out.println("Welcome to our Algorithms and Data Structures Project."
+					+ "\n please input two bus stops to find shortest path.");
+			while (input.hasNext()) {
+				if(input.hasNext())
+				{
+					String busStop1 = input.next();
+					String busStop2 = input.next();
+					setup(busStop1,busStop2);
+					System.out.println("Please enter another set of bus stops.");
+				}
+			}
 		}
 	}
 }
