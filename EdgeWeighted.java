@@ -174,8 +174,8 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 
 				// If the closest non-visited node is our destination, we want to print the path
 				if (currentNode == end) {
-					System.out.println("The path with the smallest weight between "
-							+ start.name + " and " + end.name + " is:");
+					System.out.println("The path with the lowest cost from Stop "
+							+ start.name + " to Stop " + end.name + " is:");
 
 					NodeWeighted child = end;
 
@@ -364,8 +364,10 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 
 		}
 
-		public static void printTime(String s0)
+		public static void printTime(String s0) throws IOException
 		{
+			parseFile();	
+			readTransfers();
 			for (int i = 0; i < arrivalTime.size(); i++)
 			{
 				String s1 = arrivalTime.get(i);
@@ -407,15 +409,30 @@ public class EdgeWeighted implements Comparable<EdgeWeighted> {
 
 			Scanner input = new Scanner(System.in);
 			System.out.println("Welcome to our Algorithms and Data Structures Project."
-					+ "\n please input two bus stops to find shortest path.");
-			while (input.hasNext()) {
-				if(input.hasNext())
-				{
-					String busStop1 = input.next();
-					String busStop2 = input.next();
-					setup(busStop1,busStop2);
-					System.out.println("Please enter another set of bus stops.");
-				}
+					+ "\n please input \"1\" for dijkstra algorithm or \"2\" for search by time");
+			String checker = input.next();
+			if (checker.equals("1")) {
+				
+					
+						System.out.println("\nPlease input two bus stops to find shortest path.");
+						String busStop1 = input.next();
+						String busStop2 = input.next();
+						System.out.println("One Moment Please.");
+						setup(busStop1,busStop2);
+						
+
+					}
+
+				
+			
+			else if (checker.equals("2")){
+				System.out.println("\n please input a time to search for");
+				String tmp = input.next();
+				String time = " " + tmp;
+				System.out.println("\n here are all of the trips which have the inputted arrival time:");
+				System.out.println("\nTripID: Arrival Time: DepartureTime: StopID: stop_sequence: stop_headsign: pickup_type: drop_off_type: shape_dist_traveled: ");
+				printTime(time);
+				
 			}
 		}
 	}
