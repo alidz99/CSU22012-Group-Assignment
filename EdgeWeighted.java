@@ -404,6 +404,7 @@ public static class Graph
 		@SuppressWarnings("resource")
 		Scanner input = new Scanner(System.in);
 		boolean isValid = true;
+		String time = "";
 		System.out.println("Welcome to our Algorithms and Data Structures Project.");
 		do {
 
@@ -439,7 +440,10 @@ public static class Graph
 					System.out.println("program terminated");
 					isValid = false;
 				}
-				String time = " " + tmp;
+				if (tmp.length() == 7) {
+				 time = " " + tmp;
+				}
+				else time = tmp;
 				printTime(time);
 			}
 			else {
